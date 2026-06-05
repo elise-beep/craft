@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Craft Timeline — Interactive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000000;
+    --accent:#B4966E;--accent-bright:#C8A87A;
+    --green:#1B3A24;--green-bright:#2A5C38;--green-vivid:#3A8C52;
+    --text-white:#ffffff;--text-primary:#f5f5f5;--text-secondary:#c8c4bc;--text-muted:#4a4a44;
+    --line:rgba(180,150,110,0.16);--line-strong:rgba(180,150,110,0.34);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased}
+  /* Black to match a black Wix section. If your section isn't black, set to `transparent`. */
+  body{background:var(--bg);color:var(--text-primary);font-family:'Inter',sans-serif;
+    font-weight:300;line-height:1.5;overflow-x:hidden}
+  body::after{content:"";position:fixed;inset:0;z-index:90;pointer-events:none;opacity:0.04;
+    mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  .embed{max-width:1180px;margin:0 auto;padding:clamp(20px,4vw,46px) clamp(16px,4vw,48px)}
+
+  .hint{display:flex;align-items:center;gap:12px;margin-bottom:clamp(18px,3vh,28px);
+    font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--text-muted)}
+  .hint .ln{flex:1;height:1px;background:repeating-linear-gradient(90deg,var(--line) 0 7px,transparent 7px 13px)}
+
+  /* RAIL */
+  .rail-wrap{position:relative;margin-bottom:clamp(22px,4vh,40px)}
+  .rail{display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;
+    -webkit-overflow-scrolling:touch}
+  .rail::-webkit-scrollbar{display:none}
+  .rail::before{content:"";position:absolute;left:0;right:0;top:7px;height:1px;
+    background:repeating-linear-gradient(90deg,var(--line) 0 7px,transparent 7px 13px)}
+  .node{flex:0 0 auto;min-width:clamp(86px,12vw,150px);background:none;border:none;cursor:pointer;
+    padding:0 8px 0 0;font-family:inherit;text-align:left;position:relative;z-index:1}
+  .node .dot{width:15px;height:15px;border-radius:50%;background:var(--bg);
+    border:1px solid var(--line-strong);margin-bottom:13px;transition:all .4s ease}
+  .node .yr{display:block;font-size:0.7rem;letter-spacing:0.12em;color:var(--text-muted);transition:color .4s ease}
+  .node .nm{display:block;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.94rem;
+    color:var(--text-muted);margin-top:3px;transition:color .4s ease;max-width:13ch;line-height:1.15}
+  .node:hover .yr,.node:hover .nm{color:var(--text-secondary)}
+  .node.active .dot{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px rgba(180,150,110,0.18)}
+  .node.active .yr{color:var(--accent)}
+  .node.active .nm{color:var(--text-white)}
+
+  /* STAGE — image-forward */
+  .stage{position:relative}
+  .ghost{position:absolute;right:-1%;top:-14%;z-index:0;font-family:'Cormorant Garamond',serif;
+    font-weight:500;font-size:clamp(7rem,20vw,17rem);line-height:1;color:rgba(180,150,110,0.045);
+    pointer-events:none;user-select:none;transition:opacity .5s ease}
+  .grid{position:relative;z-index:1;display:grid;grid-template-columns:1.22fr 0.78fr;
+    gap:clamp(24px,3.6vw,56px);align-items:center}
+
+  /* the photo is the hero */
+  .frame{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;
+    background:#0a0a0a;aspect-ratio:5/4}
+  .frame .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    padding:24px;transition:opacity .5s ease}
+  .frame .ph-tag{font-size:0.58rem;letter-spacing:0.24em;text-transform:uppercase;color:rgba(255,255,255,0.5);
+    border:1px solid rgba(255,255,255,0.2);padding:7px 13px;border-radius:2px}
+  .frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .55s ease}
+  .frame img.loaded{opacity:1;animation:kb 16s ease-out forwards}
+  @keyframes kb{from{transform:scale(1.005)}to{transform:scale(1.085)}}
+  .frame .grad{position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:linear-gradient(to top,rgba(0,0,0,0.84) 0%,rgba(0,0,0,0.34) 36%,transparent 64%)}
+  .frame .idx{position:absolute;top:15px;left:18px;z-index:3;font-size:0.6rem;letter-spacing:0.24em;
+    color:rgba(255,255,255,0.72);text-shadow:0 1px 6px rgba(0,0,0,0.6)}
+  .frame .fcap{position:absolute;left:clamp(18px,2.4vw,30px);right:18px;bottom:clamp(16px,2.4vw,28px);
+    z-index:3;transition:opacity .45s ease}
+  .frame .e-yrs{font-size:0.66rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--accent-bright);
+    display:block;margin-bottom:0.55em;text-shadow:0 1px 6px rgba(0,0,0,0.6)}
+  .frame .e-name{font-family:'Cormorant Garamond',serif;font-weight:500;
+    font-size:clamp(1.8rem,3vw,3rem);line-height:1.02;color:var(--text-white);
+    text-shadow:0 2px 16px rgba(0,0,0,0.55)}
+
+  /* supporting text */
+  .info{transition:opacity .45s ease,transform .45s ease}
+  .e-story{font-size:clamp(1rem,1.3vw,1.12rem);color:var(--text-secondary);line-height:1.72;
+    margin-bottom:1.4em;font-weight:300}
+  .stitch{border:none;border-top:1px dashed var(--line-strong);margin:1.3em 0}
+  .specs{display:flex;gap:30px;flex-wrap:wrap;margin-bottom:1.5em}
+  .spec .l{font-size:0.58rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:0.5em}
+  .spec .v{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.18rem;color:var(--text-white)}
+  .tq-head{font-size:0.6rem;letter-spacing:0.24em;text-transform:uppercase;color:var(--accent);margin-bottom:0.3em}
+  .tq{border-top:1px solid var(--line)}
+  .tq:last-child{border-bottom:1px solid var(--line)}
+  .tq-btn{width:100%;background:none;border:none;cursor:pointer;font-family:inherit;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 2px;text-align:left}
+  .tq-btn .tn{font-family:'Cormorant Garamond',serif;font-size:1.26rem;color:var(--text-primary);transition:color .3s ease}
+  .tq-btn:hover .tn{color:var(--accent-bright)}
+  .tq-btn .pl{position:relative;width:13px;height:13px;flex:0 0 auto}
+  .tq-btn .pl::before,.tq-btn .pl::after{content:"";position:absolute;background:var(--accent);transition:transform .35s ease}
+  .tq-btn .pl::before{left:0;top:6px;width:13px;height:1px}
+  .tq-btn .pl::after{left:6px;top:0;width:1px;height:13px}
+  .tq.open .pl::after{transform:scaleY(0)}
+  .tq-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+  .tq-body p{font-size:0.93rem;color:var(--text-secondary);line-height:1.62;padding:0 2px 16px;font-weight:300}
+
+  .arrows{display:flex;gap:12px;margin-top:clamp(22px,3.5vh,40px)}
+  .arrow{flex:0 0 auto;background:none;border:1px solid var(--line);border-radius:2px;color:var(--text-secondary);
+    cursor:pointer;font-family:'Inter',sans-serif;font-size:0.66rem;letter-spacing:0.18em;text-transform:uppercase;
+    padding:14px 22px;transition:all .3s ease}
+  .arrow:hover{border-color:var(--accent);color:var(--accent-bright)}
+  .arrow:disabled{opacity:0.3;cursor:default}
+  .arrow:disabled:hover{border-color:var(--line);color:var(--text-secondary)}
+
+  /* ---- MOBILE ---- */
+  @media(max-width:820px){
+    .grid{grid-template-columns:1fr;gap:0}
+    .frame{aspect-ratio:4/3;border-radius:4px 4px 0 0;border-bottom:none}
+    .info{border:1px solid var(--line);border-top:none;border-radius:0 0 4px 4px;
+      padding:clamp(20px,5vw,28px)}
+    .ghost{display:none}
+    .frame .e-name{font-size:clamp(1.9rem,7vw,2.6rem)}
+    .frame .e-yrs{font-size:0.62rem}
+  }
+  @media(max-width:480px){
+    .frame{aspect-ratio:3/2}
+    .node{min-width:78px}
+    .arrows{gap:8px}
+    .arrow{flex:1;text-align:center;padding:15px 12px}
+    .specs{gap:22px}
+  }
+</style>
+</head>
+<body>
+  <div class="embed">
+    <div class="hint"><span>Tap an era — or use the arrows</span><span class="ln"></span></div>
+
+    <div class="rail-wrap"><div class="rail" id="rail"></div></div>
+
+    <div class="stage">
+      <div class="ghost" id="ghost"></div>
+      <div class="grid">
+        <div class="frame" id="frame">
+          <div class="ph" id="ph"><span class="ph-tag" id="phTag"></span></div>
+          <img id="img" alt="">
+          <div class="grad"></div>
+          <span class="idx" id="idx"></span>
+          <div class="fcap" id="fcap">
+            <span class="e-yrs" id="eYrs"></span>
+            <h3 class="e-name" id="eName"></h3>
+          </div>
+        </div>
+
+        <div class="info" id="info">
+          <p class="e-story" id="eStory"></p>
+          <hr class="stitch">
+          <div class="specs">
+            <div class="spec"><span class="l">Signature material</span><span class="v" id="eMat"></span></div>
+            <div class="spec"><span class="l">Of its time</span><span class="v" id="eIcon"></span></div>
+          </div>
+          <div class="tq-head">Techniques it gave us</div>
+          <div id="tqs"></div>
+        </div>
+      </div>
+
+      <div class="arrows">
+        <button class="arrow" id="prev">← Earlier</button>
+        <button class="arrow" id="next">Later →</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  /* DROP-IN PHOTOS: /images/era-coachbuilt.jpg … era-today.jpg. Tonal placeholders show until they load. */
+  var ERAS=[
+    {yr:'1900s–20s',ghost:'1921',label:'The Coachbuilt Age',name:'The Coachbuilt Age',
+      image:'images/era-coachbuilt.jpg',tone:['#5a4326','#241a0e'],
+      mat:'Leather & horsehair',icon:'Rolls-Royce Silver Ghost',
+      story:'Before the production line, every motor car was trimmed like a carriage — by hand, by eye, by craftsmen who had never seen a factory. Open tourers wore hard-wearing leather; closed cars for the wealthy were lined in fine wool cloth, stuffed with horsehair and held by hand-tied buttons.',
+      tq:[{n:'Deep buttoning',d:'Buttons drawn deep into the stuffing to pull the leather into soft, regular pillows — the original signature of a coachbuilt interior.'},
+          {n:'Hand-tied springs',d:'Coil-sprung seats built with the hand methods of the furniture trade the first car trimmers came from.'},
+          {n:'Saddle stitching',d:'The two-needle hand stitch borrowed from saddlery, locked so one broken thread can’t unravel the seam.'}]},
+    {yr:'1930s',ghost:'1934',label:'Art Deco',name:'Art Deco & the Grand Cloth',
+      image:'images/era-deco.jpg',tone:['#3f4633','#1c2014'],
+      mat:'Mohair & Bedford cord',icon:'Cord 810 · Duesenberg J',
+      story:'The streamline decade dressed its cars like its buildings. Coachbuilders reached for figured velour, broadcloth and Bedford cord, in colours and patterns that announced both money and modernity. Trim became architecture — pleated, piped and tailored to the line of the body.',
+      tq:[{n:'Fluting & pleating',d:'Parallel padded channels sewn across a panel — the rhythm that gave Deco interiors their tailored, upholstered drama.'},
+          {n:'Piping & welting',d:'A cord-filled seam run along every edge to define the shape and protect the join — still the line between sharp trim and soft.'}]},
+    {yr:'1950s',ghost:'1957',label:'Chrome & Vinyl',name:'Chrome, Vinyl & Optimism',
+      image:'images/era-fifties.jpg',tone:['#5a4a2e','#231b10'],
+      mat:'Vinyl & nylon, two-tone',icon:'Cadillac Eldorado · Bel Air',
+      story:'Postwar America wanted colour, chrome and a future you could wipe clean. Vinyl arrived in volume — bright, tough and modern — sharing the cabin with nylon cloth and acres of brightwork. Two-tone everything, and the seat styled like a jukebox.',
+      tq:[{n:'Machine-sewn vinyl',d:'Bright, wipe-clean vinyl cut and stitched on the machine into the bold covers the jet age wanted.'},
+          {n:'Two-tone panelling',d:'Contrasting colours seamed into a single cover — bold, graphic, and far harder to cut and match than it looks.'}]},
+    {yr:'1960s–70s',ghost:'1968',label:'The Sports Era',name:'The Sports Era',
+      image:'images/era-sports.jpg',tone:['#574326','#221a0d'],
+      mat:'Leather & Pepita houndstooth',icon:'Porsche 911 · Jaguar E-Type',
+      story:'Lightness and intent. GT and sports cars brought the bolstered bucket seat, hides chosen for feel over flash, and the period cloths that became legend — houndstooth, tartan, Pepita. The seat now had to hold you as much as flatter you.',
+      tq:[{n:'Bolster construction',d:'Raised side rolls built up over shaped foam to grip the body through corners — the moment the seat became equipment.'},
+          {n:'Cloth centre inserts',d:'A breathable patterned cloth set into a leather surround — grippy, cool, and unmistakably of its era.'},
+          {n:'Hand-stitched hide',d:'Twin-needle topstitch worked over compound curves, where the maker’s hand still beats any machine.'}]},
+    {yr:'1980s',ghost:'1985',label:'Velour',name:'Velour & the Electric Seat',
+      image:'images/era-eighties.jpg',tone:['#37402f','#181c12'],
+      mat:'Velour & crushed velvet',icon:'Mercedes W126 · BMW E28',
+      story:'Comfort as luxury. Plush velour and crushed velvet wrapped the executive class in something close to a living room, while motors, memory and heating disappeared into the seat. Maligned now, beloved then — and quietly creeping back.',
+      tq:[{n:'Velour upholstery',d:'A deep, directional pile that catches the light and hides a seam — forgiving to sit on, unforgiving to cut and match.'},
+          {n:'Electric seat integration',d:'Trim reworked around motors and frames so the mechanism vanishes and only the comfort remains.'}]},
+    {yr:'1990s–2000s',ghost:'1998',label:'Performance',name:'Performance & Alcantara',
+      image:'images/era-performance.jpg',tone:['#4a4636','#1d1b14'],
+      mat:'Alcantara & perforated leather',icon:'Lancia Delta · Ferrari 360',
+      story:'Motorsport set the tone. Alcantara — the microfibre suede invented back in the 1970s — had by now spread from the racetrack into road cars for its grip and lightness, perforated leather learned to breathe, and the airbag quietly rewrote how a seat could be sewn at all.',
+      tq:[{n:'Perforation',d:'Thousands of tiny holes punched through the hide to ventilate, lighten and pattern — once by hand, now by laser.'},
+          {n:'Airbag-safe seaming',d:'A seam engineered to split at exactly the right place and moment — invisible craft with a life-or-death tolerance.'}]},
+    {yr:'Today',ghost:'Now',label:'The Coachbuilt Revival',name:'Digital Precision, Human Hands',
+      image:'images/era-today.jpg',tone:['#1B3A24','#0a160d'],
+      mat:'Quilted leather, Alcantara & composites',icon:'Your commission',
+      story:'The craft has its finest tools in a century — laser cutting, CNC, digital templating — and uses them to free the hand, not replace it. Diamond quilting, bespoke perforation art, embroidery and coachbuilt one-offs: the impossible interior, made buildable.',
+      tq:[{n:'Diamond quilting',d:'A precise lattice of padded diamonds, set out digitally and stitched with a consistency the old masters could only dream of.'},
+          {n:'Laser cutting & etching',d:'Pattern, perforation and inlay cut to a fraction of a millimetre — then finished, always, by hand.'},
+          {n:'Bespoke embroidery',d:'Logos, motifs and lettering stitched into the hide — the modern signature on a coachbuilt interior.'}]}
+  ];
+
+  var rail=document.getElementById('rail'),ghost=document.getElementById('ghost');
+  var ph=document.getElementById('ph'),phTag=document.getElementById('phTag');
+  var img=document.getElementById('img'),idx=document.getElementById('idx'),fcap=document.getElementById('fcap');
+  var info=document.getElementById('info');
+  var eYrs=document.getElementById('eYrs'),eName=document.getElementById('eName'),eStory=document.getElementById('eStory');
+  var eMat=document.getElementById('eMat'),eIcon=document.getElementById('eIcon'),tqs=document.getElementById('tqs');
+  var prev=document.getElementById('prev'),next=document.getElementById('next');
+  var current=-1,total=ERAS.length;
+
+  function toneCss(t){return 'radial-gradient(120% 120% at 30% 22%,'+t[0]+','+t[1]+')'}
+  function pad(n){return (n<10?'0':'')+n}
+  function postHeight(){try{parent.postMessage({type:'craftTimelineHeight',height:document.body.scrollHeight},'*')}catch(e){}}
+
+  ERAS.forEach(function(e,i){
+    var b=document.createElement('button');b.className='node';b.setAttribute('data-i',i);
+    b.innerHTML='<span class="dot"></span><span class="yr">'+e.yr+'</span><span class="nm">'+e.label+'</span>';
+    b.addEventListener('click',function(){select(i)});
+    rail.appendChild(b);
+  });
+  var nodes=Array.prototype.slice.call(rail.children);
+
+  function buildTechniques(e){
+    tqs.innerHTML='';
+    e.tq.forEach(function(t){
+      var item=document.createElement('div');item.className='tq';
+      item.innerHTML='<button class="tq-btn"><span class="tn">'+t.n+'</span><span class="pl"></span></button>'+
+        '<div class="tq-body"><p>'+t.d+'</p></div>';
+      var btn=item.querySelector('.tq-btn'),body=item.querySelector('.tq-body');
+      btn.addEventListener('click',function(){
+        var willOpen=!item.classList.contains('open');
+        tqs.querySelectorAll('.tq.open').forEach(function(o){o.classList.remove('open');o.querySelector('.tq-body').style.maxHeight='0'});
+        if(willOpen){item.classList.add('open');body.style.maxHeight=body.scrollHeight+'px'}
+        postHeight();
+      });
+      tqs.appendChild(item);
+    });
+  }
+
+  function select(i){
+    if(i<0||i>=total)return;
+    current=i;var e=ERAS[i];
+    nodes.forEach(function(n,k){n.classList.toggle('active',k===i)});
+    nodes[i].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+    prev.disabled=(i===0);next.disabled=(i===total-1);
+
+    info.style.opacity='0';info.style.transform='translateY(10px)';
+    fcap.style.opacity='0';ghost.style.opacity='0';
+    img.classList.remove('loaded');
+    ph.style.background=toneCss(e.tone);
+    phTag.textContent='Replace · '+e.image.split('/').pop();ph.style.opacity='1';
+
+    var probe=new Image();
+    probe.onload=function(){img.src=e.image;img.classList.add('loaded');ph.style.opacity='0'};
+    probe.onerror=function(){img.removeAttribute('src');ph.style.opacity='1'};
+    probe.src=e.image;
+
+    setTimeout(function(){
+      idx.textContent=pad(i+1)+' / '+pad(total);
+      eYrs.textContent=e.yr;eName.textContent=e.name;
+      eStory.textContent=e.story;eMat.textContent=e.mat;eIcon.textContent=e.icon;
+      buildTechniques(e);
+      info.style.opacity='1';info.style.transform='translateY(0)';fcap.style.opacity='1';ghost.style.opacity='1';
+      postHeight();
+    },220);
+  }
+
+  prev.addEventListener('click',function(){select(current-1)});
+  next.addEventListener('click',function(){select(current+1)});
+  document.addEventListener('keydown',function(ev){
+    if(ev.key==='ArrowLeft')select(current-1);
+    if(ev.key==='ArrowRight')select(current+1);
+  });
+  window.addEventListener('load',postHeight);
+
+  select(0);
+})();
+</script>
+</body>
+</html>
