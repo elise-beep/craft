@@ -54,7 +54,7 @@
     font-weight:500;font-size:clamp(7rem,20vw,17rem);line-height:1;color:rgba(180,150,110,0.045);
     pointer-events:none;user-select:none;transition:opacity .5s ease}
   .grid{position:relative;z-index:1;display:grid;grid-template-columns:1.22fr 0.78fr;
-    gap:clamp(24px,3.6vw,56px);align-items:center}
+    gap:clamp(24px,3.6vw,56px);align-items:start}
 
   /* the photo is the hero */
   .frame{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;
@@ -126,12 +126,12 @@
     .arrow{flex:1;text-align:center;padding:15px 12px}
     .specs{gap:22px}
   }
+  .e-story p{margin:0 0 0.85em}
+  .e-story p:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
   <div class="embed">
-    <div class="hint"><span>Tap an era — or use the arrows</span><span class="ln"></span></div>
-
     <div class="rail-wrap"><div class="rail" id="rail"></div></div>
 
     <div class="stage">
@@ -149,7 +149,7 @@
         </div>
 
         <div class="info" id="info">
-          <p class="e-story" id="eStory"></p>
+          <div class="e-story" id="eStory"></div>
           <hr class="stitch">
           <div class="specs">
             <div class="spec"><span class="l">Signature material</span><span class="v" id="eMat"></span></div>
@@ -171,51 +171,51 @@
 (function(){
   /* DROP-IN PHOTOS: /images/era-coachbuilt.jpg … era-today.jpg. Tonal placeholders show until they load. */
   var ERAS=[
-    {yr:'1900s–20s',ghost:'1921',label:'The Coachbuilt Age',name:'The Coachbuilt Age',
-      image:'images/era-coachbuilt.jpg',tone:['#5a4326','#241a0e'],
-      mat:'Leather & horsehair',icon:'Rolls-Royce Silver Ghost',
-      story:'Before the production line, every motor car was trimmed like a carriage — by hand, by eye, by craftsmen who had never seen a factory. Open tourers wore hard-wearing leather; closed cars for the wealthy were lined in fine wool cloth, stuffed with horsehair and held by hand-tied buttons.',
-      tq:[{n:'Deep buttoning',d:'Buttons drawn deep into the stuffing to pull the leather into soft, regular pillows — the original signature of a coachbuilt interior.'},
-          {n:'Hand-tied springs',d:'Coil-sprung seats built with the hand methods of the furniture trade the first car trimmers came from.'},
-          {n:'Saddle stitching',d:'The two-needle hand stitch borrowed from saddlery, locked so one broken thread can’t unravel the seam.'}]},
-    {yr:'1930s',ghost:'1934',label:'Art Deco',name:'Art Deco & the Grand Cloth',
-      image:'images/era-deco.jpg',tone:['#3f4633','#1c2014'],
-      mat:'Mohair & Bedford cord',icon:'Cord 810 · Duesenberg J',
-      story:'The streamline decade dressed its cars like its buildings. Coachbuilders reached for figured velour, broadcloth and Bedford cord, in colours and patterns that announced both money and modernity. Trim became architecture — pleated, piped and tailored to the line of the body.',
-      tq:[{n:'Fluting & pleating',d:'Parallel padded channels sewn across a panel — the rhythm that gave Deco interiors their tailored, upholstered drama.'},
-          {n:'Piping & welting',d:'A cord-filled seam run along every edge to define the shape and protect the join — still the line between sharp trim and soft.'}]},
-    {yr:'1950s',ghost:'1957',label:'Chrome & Vinyl',name:'Chrome, Vinyl & Optimism',
-      image:'images/era-fifties.jpg',tone:['#5a4a2e','#231b10'],
-      mat:'Vinyl & nylon, two-tone',icon:'Cadillac Eldorado · Bel Air',
-      story:'Postwar America wanted colour, chrome and a future you could wipe clean. Vinyl arrived in volume — bright, tough and modern — sharing the cabin with nylon cloth and acres of brightwork. Two-tone everything, and the seat styled like a jukebox.',
-      tq:[{n:'Machine-sewn vinyl',d:'Bright, wipe-clean vinyl cut and stitched on the machine into the bold covers the jet age wanted.'},
-          {n:'Two-tone panelling',d:'Contrasting colours seamed into a single cover — bold, graphic, and far harder to cut and match than it looks.'}]},
-    {yr:'1960s–70s',ghost:'1968',label:'The Sports Era',name:'The Sports Era',
-      image:'images/era-sports.jpg',tone:['#574326','#221a0d'],
-      mat:'Leather & Pepita houndstooth',icon:'Porsche 911 · Jaguar E-Type',
-      story:'Lightness and intent. GT and sports cars brought the bolstered bucket seat, hides chosen for feel over flash, and the period cloths that became legend — houndstooth, tartan, Pepita. The seat now had to hold you as much as flatter you.',
-      tq:[{n:'Bolster construction',d:'Raised side rolls built up over shaped foam to grip the body through corners — the moment the seat became equipment.'},
-          {n:'Cloth centre inserts',d:'A breathable patterned cloth set into a leather surround — grippy, cool, and unmistakably of its era.'},
-          {n:'Hand-stitched hide',d:'Twin-needle topstitch worked over compound curves, where the maker’s hand still beats any machine.'}]},
-    {yr:'1980s',ghost:'1985',label:'Velour',name:'Velour & the Electric Seat',
-      image:'images/era-eighties.jpg',tone:['#37402f','#181c12'],
-      mat:'Velour & crushed velvet',icon:'Mercedes W126 · BMW E28',
-      story:'Comfort as luxury. Plush velour and crushed velvet wrapped the executive class in something close to a living room, while motors, memory and heating disappeared into the seat. Maligned now, beloved then — and quietly creeping back.',
-      tq:[{n:'Velour upholstery',d:'A deep, directional pile that catches the light and hides a seam — forgiving to sit on, unforgiving to cut and match.'},
-          {n:'Electric seat integration',d:'Trim reworked around motors and frames so the mechanism vanishes and only the comfort remains.'}]},
-    {yr:'1990s–2000s',ghost:'1998',label:'Performance',name:'Performance & Alcantara',
-      image:'images/era-performance.jpg',tone:['#4a4636','#1d1b14'],
-      mat:'Alcantara & perforated leather',icon:'Lancia Delta · Ferrari 360',
-      story:'Motorsport set the tone. Alcantara — the microfibre suede invented back in the 1970s — had by now spread from the racetrack into road cars for its grip and lightness, perforated leather learned to breathe, and the airbag quietly rewrote how a seat could be sewn at all.',
-      tq:[{n:'Perforation',d:'Thousands of tiny holes punched through the hide to ventilate, lighten and pattern — once by hand, now by laser.'},
-          {n:'Airbag-safe seaming',d:'A seam engineered to split at exactly the right place and moment — invisible craft with a life-or-death tolerance.'}]},
-    {yr:'Today',ghost:'Now',label:'The Coachbuilt Revival',name:'Digital Precision, Human Hands',
-      image:'images/era-today.jpg',tone:['#1B3A24','#0a160d'],
-      mat:'Quilted leather, Alcantara & composites',icon:'Your commission',
-      story:'The craft has its finest tools in a century — laser cutting, CNC, digital templating — and uses them to free the hand, not replace it. Diamond quilting, bespoke perforation art, embroidery and coachbuilt one-offs: the impossible interior, made buildable.',
-      tq:[{n:'Diamond quilting',d:'A precise lattice of padded diamonds, set out digitally and stitched with a consistency the old masters could only dream of.'},
-          {n:'Laser cutting & etching',d:'Pattern, perforation and inlay cut to a fraction of a millimetre — then finished, always, by hand.'},
-          {n:'Bespoke embroidery',d:'Logos, motifs and lettering stitched into the hide — the modern signature on a coachbuilt interior.'}]}
+    {yr:"1900s",ghost:"1909",label:"The Coachbuilt Age",name:"Full-Hide Leather & the Coachbuilt Age",
+      image:"images/era-coachbuilt.jpg",tone:["#5a4326","#241a0e"],
+      mat:"Full-hide leather & horsehair",icon:"1909 Rolls-Royce 40/50 HP Silver Ghost Roi des Belges, in the style of Barker",
+      story:["In the earliest motor cars, upholstery still owed more to carriage trimming and saddlery than to the modern factory. Open cars needed full-hide leather that could survive sun, dust and weather; beneath the surface, seats were built with springs, webbing, horsehair and hand-shaped padding.","The result was honest, durable and deeply crafted. Every seam, button and stuffed edge belonged to a world where the motor car was still being made by hand, by eye, and by tradespeople who understood leather before they understood automobiles."],
+      tq:[{n:"Deep buttoning",d:"Buttons drawn deep into the stuffing to pull leather into soft, regular pillows — a hallmark of carriage craft carried into the first coachbuilt interiors."},{n:"Hand-tied springs",d:"Coil-sprung seats built using traditional upholstery methods: webbing, twine, padding and hand-shaped support before foam existed."},{n:"Saddle stitching",d:"A two-needle hand stitch from saddlery, used where strength mattered — each stitch holds independently, so a broken thread is less likely to open the seam."}]},
+    {yr:"1930s",ghost:"1938",label:"Art Deco",name:"Art Deco — Pleats, Piping & Prestige",
+      image:"images/era-deco.jpg",tone:["#3f4633","#1c2014"],
+      mat:"Tailored leather & luxury cloth",icon:"1938 Talbot-Lago T150-C SS Teardrop Coupé by Figoni et Falaschi",
+      story:["In the 1930s, upholstery became part of the grand styling statement. Art Deco and Streamline Moderne shaped not only the bodywork but the cabin itself, where pleated panels, crisp piping and tailored seat forms turned trim into architecture.","This was an age of elegance by design. The seat was no longer simply upholstered — it was composed. Lines were repeated, edges were defined, and every stitched surface was made to echo the glamour and discipline of the coachbuilt body around it."],
+      tq:[{n:"Pleating",d:"Rows of stitched channels that gave seat panels rhythm, shape and visual movement — soft trim made architectural."},{n:"Fluting",d:"Raised padded ribs that added sculptural depth and made upholstery feel tailored, formal and distinctly Art Deco."},{n:"Piping & welting",d:"Corded seams used to sharpen edges, define curves and give soft materials a crisp, deliberate outline."},{n:"Tailored panel composition",d:"Seats and door trims broken into carefully proportioned sections so the upholstery echoed the discipline and flow of the car’s exterior design."}]},
+    {yr:"1950s",ghost:"1959",label:"The Two-Tone Age",name:"The Two-Tone Age",
+      image:"images/era-twotone.jpg",tone:["#5a4a2e","#231b10"],
+      mat:"Vinyl, leather & nylon cloth",icon:"1959 Cadillac Eldorado Biarritz Convertible",
+      story:["Postwar America wanted colour, chrome and a future you could wipe clean. Vinyl arrived in volume: bright, tough, modern and ideal for cars that were becoming more expressive every year. In the most glamorous convertibles, leather still carried prestige, often surrounded by contrast panels, polished brightwork and the visual language of vinyl-age optimism.","Seats became graphic objects. Two-tone panels, embossed details and decorative surfaces turned the interior into part of the car’s exterior theatre — optimistic, washable and styled with the confidence of the jet age."],
+      tq:[{n:"Machine-sewn vinyl",d:"Bright, wipe-clean vinyl cut and stitched by machine into bold, durable covers — the material language of the jet age."},{n:"Two-tone panelling",d:"Contrasting colours seamed into a single cover — graphic, optimistic and far harder to cut and match than it looks."},{n:"Contrast inserts",d:"Seat centres, bolsters and door panels broken into different colours or textures, turning upholstery into part of the car’s exterior colour scheme."},{n:"Heat-sealed and embossed details",d:"Vinyl panels shaped, patterned or decorated with heat and pressure, allowing texture and ornament to become part of the material itself."}]},
+    {yr:"1960s",ghost:"1965",label:"The Sports Seat",name:"Pepita & the Sports Seat",
+      image:"images/era-pepita.jpg",tone:["#574326","#221a0d"],
+      mat:"Pepita / houndstooth-style cloth with leather or leatherette surrounds",icon:"1965 Porsche 911 Coupé",
+      story:["By the 1960s, the sports car seat had a new job. It was no longer there simply to cushion the driver; it had to hold the body, manage heat and grip clothing through corners. Leather or leatherette surrounds framed cloth centres, while Pepita and houndstooth-style patterns became some of the most recognisable textile signatures of the era.","This was the moment the seat became driving equipment. Bolsters rose, inserts became functional, and pattern matching became part of the craft."],
+      tq:[{n:"Bolster construction",d:"Raised side supports built over shaped foam to grip the body through corners — the moment the seat became driving equipment."},{n:"Cloth centre inserts",d:"Breathable patterned cloth set into leather or leatherette surrounds — cooler, grippier and unmistakably of its era."},{n:"Pattern matching",d:"Checks, repeats and woven patterns cut carefully so the design sits square and lines up across the cushion, backrest and trim panels."},{n:"Topstitched seams",d:"Visible stitch lines used to flatten, strengthen and define seams across shaped bolsters and seat faces."}]},
+    {yr:"1970s",ghost:"1976",label:"Alcantara",name:"Alcantara Arrives",
+      image:"images/era-alcantara.jpg",tone:["#3b3b40","#161618"],
+      mat:"Alcantara & technical cloth",icon:"1976 Lancia Stratos “Stradale”",
+      story:["The 1970s introduced a new kind of performance texture: technical, tactile and modern. Alcantara offered the look and touch of suede with the consistency of a manufactured microfibre, giving designers a surface that felt soft, grippy and contemporary.","In cars shaped by motorsport and extreme geometry, the cabin became more focused and more material-conscious. Soft technical surfaces, simple panels and deliberate inserts helped turn upholstery from decoration into something that supported the driver’s sense of purpose."],
+      tq:[{n:"Microfibre suede trimming",d:"A suede-like technical material cut and sewn for softness, grip and low-glare texture across seats, doors, dashboards and headlinings."},{n:"Directional nap matching",d:"Panels cut so the surface grain runs consistently; turn one piece the wrong way and the same material can appear a different colour."},{n:"Panel inserts",d:"Alcantara or technical cloth used as a tactile centre or feature panel, adding grip and texture within a leather, vinyl or cloth surround."},{n:"Contrast stitching",d:"Visible stitching used to sharpen panel lines and highlight the technical character of the material."}]},
+    {yr:"1980s",ghost:"1986",label:"Velour",name:"Velour & Soft Power",
+      image:"images/era-velour.jpg",tone:["#37402f","#181c12"],
+      mat:"Velour",icon:"1986 Cadillac Fleetwood Brougham d’Elegance",
+      story:["Comfort became its own kind of luxury. In the plushest cars of the 1980s, deep velour wrapped cabins in a softer, more domestic kind of prestige: thick cushions, buttoned surfaces, deep colour and the unmistakable feeling of a living room on wheels.","This was luxury by softness and scale. The best seats no longer just looked expensive; they invited you to sink in. Maligned for years, velour now feels unmistakably of its time: plush, confident and deeply comfortable."],
+      tq:[{n:"Velour upholstery",d:"A deep, directional pile that catches the light and changes shade with the grain — soft to sit on, but unforgiving to cut, sew and match."},{n:"Directional pile matching",d:"Panels cut so the nap runs consistently across cushions, bolsters and door trims; get it wrong and the same fabric looks like two different colours."},{n:"Button-tufted cushioning",d:"Buttons and seams pulled into thick padded surfaces, creating the pillow-like comfort that defined the plush luxury cabin."},{n:"Soft panel tailoring",d:"Large cloth panels cut and shaped to sit smoothly over generous foam and spring structures without losing their relaxed, lounge-like character."}]},
+    {yr:"1990s",ghost:"1993",label:"Arcade Cloth",name:"Arcade Cloth & the Compact Executive",
+      image:"images/era-arcade.jpg",tone:["#45413a","#1c1a16"],
+      mat:"Patterned cloth / Arcade textile",icon:"1993 Mercedes-Benz 190E Avantgarde",
+      story:["The 1990s made patterned cloth a place for personality. In the Mercedes-Benz 190E Avantgarde, the compact executive cabin became unexpectedly graphic, using bold textile inserts to bring colour, art and youth culture into a car better known for restraint.","This was cloth as identity. Patterned fabric was no longer just a durable alternative to leather; it could define a special edition, change the mood of a cabin and prove that textile design belonged in serious cars too."],
+      tq:[{n:"Graphic cloth inserts",d:"Bold patterned fabric set into seats and door panels, turning upholstery into the main visual signature of the interior."},{n:"Pattern matching",d:"Repeats and motifs aligned across cushions, backrests and door inserts so graphic trim still looked deliberate and controlled."},{n:"Foam-backed cloth",d:"Fabric bonded to a thin foam backing for softness, shape and easier sewing across modern seat forms."},{n:"Machine topstitching",d:"Precise stitch lines used to control seams, define panel edges and help cloth covers sit cleanly over foam structures."}]},
+    {yr:"2010s",ghost:"2019",label:"Synthetic Luxury",name:"The Synthetic Luxury Shift",
+      image:"images/era-synthetic.jpg",tone:["#4a4030","#1e1a12"],
+      mat:"Synthetic leather / vegan leather",icon:"2019 Tesla Model 3",
+      story:["By the 2010s, synthetic leather was no longer simply a cheaper substitute. In electric cars and technology-led interiors, leather-free upholstery became part of a new luxury language: clean, consistent, durable and aligned with changing expectations around animals, sustainability and modernity.","The seat still had to feel premium, but the meaning of premium had changed. Smooth synthetic surfaces, heated cushions, airbags, sensors and minimalist design made the cabin feel less like old-world luxury and more like a piece of consumer technology."],
+      tq:[{n:"Synthetic leather trimming",d:"Leather-like material cut and sewn for durability, consistency and easy-care interiors across technology-led cars."},{n:"Embossed grain",d:"Surface texture pressed into synthetic material to create a more natural leather-like appearance and hand feel."},{n:"Airbag-safe seams",d:"Controlled tear seams engineered to open at the right place and moment during side-airbag deployment — invisible craft with a life-or-death tolerance."},{n:"Heated-seat integration",d:"Trim, foam and wiring designed together so warmth can pass through the cover without damaging the material or distorting the seat."}]},
+    {yr:"Today",ghost:"Now",label:"Bespoke Electric",name:"The Bespoke Electric Age",
+      image:"images/era-today.jpg",tone:["#1B3A24","#0a160d"],
+      mat:"Bespoke leather, technical textiles & illuminated perforation",icon:"Rolls-Royce Spectre Series II",
+      story:["Today’s most advanced luxury interiors are shaped by two forces at once: electric technology and bespoke craft. Digital templating, precision perforation, illuminated surfaces and complex material combinations allow a cabin to become more than a place to sit — it becomes an atmosphere.","In the finest modern cars, the interior is engineered before it is upholstered, but the finish still depends on human hands. Leather, technical textiles, light, stitching and perforation all have to work with airbags, heating, ventilation, sensors and personalisation — and still feel effortless."],
+      tq:[{n:"Placed perforation",d:"Ventilation holes, patterns and motifs positioned with precision so leather can carry both function and design."},{n:"Digital templating",d:"Seat covers and panels developed from exact patterns so complex curves, airbags, heating, ventilation and decorative stitching can work together beneath one clean surface."},{n:"Bespoke embroidery",d:"Logos, motifs, monograms and lettering stitched into the trim — the modern signature of a personalised interior."},{n:"Illuminated trim integration",d:"Light built into doors, panels and perforated surfaces, turning upholstery into part of the cabin’s digital atmosphere."}]},
   ];
 
   var rail=document.getElementById('rail'),ghost=document.getElementById('ghost');
@@ -277,7 +277,7 @@
     setTimeout(function(){
       idx.textContent=pad(i+1)+' / '+pad(total);
       eYrs.textContent=e.yr;eName.textContent=e.name;
-      eStory.textContent=e.story;eMat.textContent=e.mat;eIcon.textContent=e.icon;
+      eStory.innerHTML=e.story.map(function(p){return '<p>'+p+'</p>'}).join('');eMat.textContent=e.mat;eIcon.textContent=e.icon;
       buildTechniques(e);
       info.style.opacity='1';info.style.transform='translateY(0)';fcap.style.opacity='1';ghost.style.opacity='1';
       postHeight();
